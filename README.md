@@ -17,6 +17,7 @@ DoubtBridge is a full-stack instant doubt-solving platform where students can co
 3. Set backend env values:
    - `MONGO_URI`
    - `MONGO_DB_NAME`
+   
    - `JWT_SECRET`
    - Firebase Admin credentials for Google login:
      - `FIREBASE_PROJECT_ID`
