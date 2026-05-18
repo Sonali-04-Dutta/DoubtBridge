@@ -1,0 +1,100 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-soft: #f8f5ff;
+  --surface: rgba(255, 255, 255, 0.72);
+  --stroke: rgba(255, 255, 255, 0.58);
+  --ink: #1f1b2f;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(173, 125, 255, 0.22), transparent 32%),
+    radial-gradient(circle at 88% 24%, rgba(143, 79, 255, 0.18), transparent 35%),
+    radial-gradient(circle at 50% 88%, rgba(236, 219, 255, 0.7), transparent 44%),
+    var(--bg-soft);
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Sora", sans-serif;
+}
+
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--stroke);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #7b35f0 0%, #ad7dff 55%, #5f3dc4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.soft-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.soft-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(123, 53, 240, 0.35);
+  border-radius: 999px;
+}
+
+.payment-trust-toast {
+  width: min(420px, calc(100vw - 24px));
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(250, 246, 255, 0.86)),
+    radial-gradient(circle at 88% 12%, rgba(245, 190, 89, 0.22), transparent 32%),
+    radial-gradient(circle at 8% 88%, rgba(123, 53, 240, 0.18), transparent 34%);
+  padding: 14px;
+  backdrop-filter: blur(18px);
+  transform-origin: top right;
+}
+
+.payment-trust-toast-in {
+  animation: paymentTrustIn 260ms ease-out both;
+}
+
+.payment-trust-toast-out {
+  animation: paymentTrustOut 180ms ease-in both;
+}
+
+@keyframes paymentTrustIn {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, -10px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes paymentTrustOut {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(18px, -10px, 0) scale(0.96);
+  }
+}
