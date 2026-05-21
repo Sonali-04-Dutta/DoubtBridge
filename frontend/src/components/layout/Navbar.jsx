@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import logo from "../../assets/logo.png";
 import { FaBars, FaBell, FaBookOpen, FaChevronDown, FaComments, FaDoorOpen, FaTimes, FaUserCircle } from "react-icons/fa";
 import { Link, NavLink } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -197,11 +198,35 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/50 bg-white/60 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-purple-100 bg-[#f7f2ff]/90 backdrop-blur-xl shadow-sm">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 md:px-8">
-        <Link to="/" className="text-xl font-extrabold tracking-tight text-brand-700">
-          DoubtBridge
-        </Link>
+        <Link
+  to="/"
+  className="flex items-center gap-3 text-xl font-extrabold tracking-tight text-brand-700"
+>
+  
+  <img
+  src={logo}
+  alt="logo"
+  className="
+    h-14 w-14
+    rounded-2xl
+    bg-[#f3ecff]
+    p-1
+    object-contain
+    mix-blend-multiply
+    transition-all
+    duration-300
+    hover:scale-110
+    hover:rotate-3
+    hover:shadow-[0_0_20px_rgba(168,85,247,0.45)]
+    animate-[floatLogo_3s_ease-in-out_infinite]
+  "
+/>
+  <span className="bg-gradient-to-r from-purple-700 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent">
+  DoubtBridge
+</span>
+</Link>
 
         <nav className="hidden items-center gap-2 md:flex">
           <NavLink className={linkClass} to="/">Home</NavLink>
