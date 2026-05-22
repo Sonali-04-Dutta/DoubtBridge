@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { FaBell, FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { api } from "../lib/api";
 import { connectSocket, socket } from "../lib/socket";
@@ -43,6 +44,29 @@ const normalizeNotification = (item) => {
     isRead: Boolean(item.isRead || item.read),
     actionUrl: item.actionUrl
   };
+};
+
+const toastToneByType = {
+  payment_success: {
+    icon: FaCheckCircle,
+    badge: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+    border: "border-emerald-100"
+  },
+  payment_failed: {
+    icon: FaExclamationTriangle,
+    badge: "bg-rose-50 text-rose-600 ring-rose-100",
+    border: "border-rose-100"
+  },
+  message: {
+    icon: FaInfoCircle,
+    badge: "bg-brand-50 text-brand-700 ring-brand-100",
+    border: "border-brand-100"
+  },
+  default: {
+    icon: FaBell,
+    badge: "bg-slate-100 text-slate-700 ring-slate-200",
+    border: "border-white/70"
+  }
 };
 
 const playFallbackTone = (success = true) => {
@@ -97,14 +121,37 @@ export const NotificationProvider = ({ children }) => {
     if (next.type === "payment_success") playSound("/sounds/success.mp3", true);
     if (next.type === "payment_failed") playSound("/sounds/fail.mp3", false);
     if (popup) {
+      const tone = toastToneByType[next.type] || toastToneByType.default;
+      const ToastIcon = tone.icon;
       toast.custom(
         (t) => (
-          <div className={`${t.visible ? "animate-[paymentTrustIn_220ms_ease-out]" : "animate-[paymentTrustOut_160ms_ease-in]"} max-w-sm rounded-2xl border border-white/70 bg-white/95 p-4 text-slate-900 shadow-card backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:text-white`}>
-            <div className="flex gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-100 text-xl dark:bg-brand-500/20">{next.icon}</span>
-              <div>
-                <p className="text-sm font-extrabold">{next.title}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-300">{next.message}</p>
+          <div className={`${t.visible ? "animate-[paymentTrustIn_220ms_ease-out]" : "animate-[paymentTrustOut_160ms_ease-in]"} w-[min(390px,calc(100vw-24px))] rounded-2xl border ${tone.border} bg-white/95 p-4 text-slate-900 shadow-card ring-1 ring-black/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:text-white`}>
+            <div className="flex items-start gap-3">
+              <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ring-1 ${tone.badge}`}>
+                <ToastIcon />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-extrabold leading-5">{next.title}</p>
+                  <button
+                    type="button"
+                    onClick={() => toast.dismiss(t.id)}
+                    className="rounded-full px-2 text-lg leading-5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-white/10 dark:hover:text-white"
+                    aria-label="Dismiss alert"
+                  >
+                    x
+                  </button>
+                </div>
+                <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-slate-500 dark:text-slate-300">{next.message}</p>
+                {next.actionUrl ? (
+                  <a
+                    href={next.actionUrl}
+                    onClick={() => toast.dismiss(t.id)}
+                    className="mt-3 inline-flex rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900"
+                  >
+                    Open
+                  </a>
+                ) : null}
               </div>
             </div>
           </div>

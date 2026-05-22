@@ -148,6 +148,7 @@ export const createBooking = async (req, res, next) => {
         join_deadline_at: booking.join_deadline_at,
         student_joined_at: booking.student_joined_at,
         teacher_joined_at: booking.teacher_joined_at,
+        student_left_at: booking.student_left_at,
         actual_started_at: booking.actual_started_at,
         session_room: booking.session_room,
         created_at: booking.createdAt,
@@ -292,6 +293,7 @@ export const getBookingById = async (req, res, next) => {
         join_deadline_at: booking.join_deadline_at,
         student_joined_at: booking.student_joined_at,
         teacher_joined_at: booking.teacher_joined_at,
+        student_left_at: booking.student_left_at,
         actual_started_at: booking.actual_started_at,
         refund_status: booking.refund_status,
         refund_amount: booking.refund_amount,
@@ -361,6 +363,19 @@ export const markBookingCompleted = async (req, res, next) => {
 
     if (!booking) {
       throw new ApiError(404, "Booking not found");
+    }
+
+    const isTeacher = booking.teacher_id.toString() === req.user.id;
+    const isLiveBeforeExpiry =
+      booking.session_status === "live" &&
+      booking.expires_at &&
+      new Date(booking.expires_at).getTime() > Date.now();
+
+    if (isTeacher && isLiveBeforeExpiry && !booking.student_left_at) {
+      throw new ApiError(
+        403,
+        "Teachers can end a paid live class only after the session time is over or after the student leaves."
+      );
     }
 
     await finishBookingSession({ booking, finalStatus: "completed", endedBy: req.user.id });

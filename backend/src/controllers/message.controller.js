@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Booking } from "../models/Booking.js";
 import { Conversation } from "../models/Conversation.js";
 import { Message } from "../models/Message.js";
+import { Notification } from "../models/Notification.js";
 import { Teacher } from "../models/Teacher.js";
 import { User } from "../models/User.js";
 
@@ -598,6 +599,18 @@ export const getConversationMessages =
             toMessagePayload(msg)
           )
         );
+
+      await Notification.updateMany(
+        {
+          userId: req.user.id,
+          type: "message",
+          isRead: false,
+          actionUrl: {
+            $regex: `[?&]conversationId=${conversation._id.toString()}($|&)`
+          }
+        },
+        { $set: { isRead: true } }
+      );
 
       return res.json({
         success: true,

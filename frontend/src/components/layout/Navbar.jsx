@@ -64,6 +64,10 @@ const Navbar = () => {
   }, [user]);
 
   useEffect(() => {
+    setUnreadNotifications(realtimeUnread);
+  }, [realtimeUnread]);
+
+  useEffect(() => {
     if (!user?.id) return undefined;
 
     const playTeacherRing = () => {
@@ -142,7 +146,7 @@ const Navbar = () => {
       window.dispatchEvent(new CustomEvent("booking-payment-updated", { detail: payload }));
     };
 
-    socket.on("notification:new", onNotification);
+                socket.on("notification:new", onNotification);
     socket.on("booking:created", onPaidBooking);
     socket.on("payment:success", onPaymentSuccess);
     socket.on("payment:refund", onPaymentRefund);

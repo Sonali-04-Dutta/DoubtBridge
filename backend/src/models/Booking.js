@@ -28,6 +28,7 @@ const bookingSchema = new mongoose.Schema(
     join_deadline_at: { type: Date, default: null, index: true },
     student_joined_at: { type: Date, default: null },
     teacher_joined_at: { type: Date, default: null },
+    student_left_at: { type: Date, default: null },
     actual_started_at: { type: Date, default: null },
     refund_status: { type: String, enum: ["none", "pending", "refunded", "failed"], default: "none", index: true },
     refund_amount: { type: Number, default: 0 },

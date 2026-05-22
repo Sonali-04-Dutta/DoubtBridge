@@ -134,7 +134,7 @@ export const createSessionToken = async (req, res, next) => {
     let booking = await Booking.findOne({
       _id: bookingId,
       $or: [{ teacher_id: req.user.id }, { student_id: req.user.id }]
-    }).select("session_room duration status teacher_id student_id session_status expires_at is_paid join_deadline_at student_joined_at teacher_joined_at actual_started_at");
+    }).select("session_room duration status teacher_id student_id session_status expires_at is_paid join_deadline_at student_joined_at teacher_joined_at student_left_at actual_started_at");
 
     if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
@@ -210,6 +210,7 @@ export const createSessionToken = async (req, res, next) => {
             joinDeadlineAt: booking.join_deadline_at,
             studentJoinedAt: booking.student_joined_at,
             teacherJoinedAt: booking.teacher_joined_at,
+            studentLeftAt: booking.student_left_at,
             expiresAt: null,
             isPaid: booking.is_paid,
             ...zegoPayload
@@ -310,6 +311,7 @@ export const createSessionToken = async (req, res, next) => {
         joinDeadlineAt: booking.join_deadline_at,
         studentJoinedAt: booking.student_joined_at,
         teacherJoinedAt: booking.teacher_joined_at,
+        studentLeftAt: booking.student_left_at,
         actualStartedAt: booking.actual_started_at,
         expiresAt: booking.expires_at,
         isPaid: booking.is_paid,

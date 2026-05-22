@@ -157,6 +157,12 @@ export const registerSocketServer = (
       await socket.authReady;
       const booking = await canAccessBooking(bookingId, socket.user?.id);
       if (!booking) return;
+      if (socket.user?.role === "student" && booking.session_status === "live") {
+        await Booking.updateOne(
+          { _id: bookingId, student_left_at: null },
+          { $set: { student_left_at: new Date() } }
+        );
+      }
       socket.leave(`booking:${bookingId}`);
       socket.to(`booking:${bookingId}`).emit("session:user-left", {
         bookingId,

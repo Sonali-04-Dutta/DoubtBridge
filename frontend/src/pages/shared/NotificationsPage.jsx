@@ -33,6 +33,7 @@ const NotificationsPage = () => {
     try {
       const { data } = await api.get("/notifications/my");
       setNotifications(data.notifications || []);
+      notificationStore.loadNotifications?.().catch(() => {});
     } catch (requestError) {
       if (!silent) {
         setError(requestError.response?.data?.message || "Could not load notifications.");
@@ -46,6 +47,7 @@ const NotificationsPage = () => {
     try {
       await api.patch(`/notifications/${notificationId}/read`);
       setNotifications((prev) => prev.map((item) => (item.id === notificationId ? { ...item, isRead: true } : item)));
+      notificationStore.markRead(notificationId);
     } catch (_error) {}
   };
 
@@ -54,6 +56,7 @@ const NotificationsPage = () => {
     try {
       await api.patch("/notifications/read-all");
       setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+      notificationStore.markAllRead();
     } catch (_error) {
     } finally {
       setMarkingAll(false);

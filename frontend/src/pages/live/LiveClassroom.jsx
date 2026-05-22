@@ -71,8 +71,10 @@ const LiveClassroom = () => {
   const [selectedExtensionMinutes, setSelectedExtensionMinutes] = useState(null);
   const [extending, setExtending] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackMode, setFeedbackMode] = useState("choice");
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState("");
+  const [studentLeftEarly, setStudentLeftEarly] = useState(false);
 
   const isStudent = user?.role === "student";
   const isTeacher = user?.role === "teacher";
@@ -85,6 +87,13 @@ const LiveClassroom = () => {
   const ownName = isTeacher ? booking?.teacher_name : booking?.student_name;
   const shouldOfferExtension = isStudent && isLive && !isClosed && timerSeconds > 0 && timerSeconds <= 120 && !dismissExtendPrompt;
   const extensionPrice = selectedExtensionMinutes ? Number(booking?.extension_prices?.[selectedExtensionMinutes] || 0) : 0;
+  const canTeacherCloseClass =
+    !isTeacher ||
+    !isLive ||
+    isClosed ||
+    timerSeconds <= 0 ||
+    studentLeftEarly ||
+    Boolean(session?.studentLeftAt || booking?.student_left_at);
 
   const participantCards = useMemo(
     () => [
@@ -124,6 +133,7 @@ const LiveClassroom = () => {
         student: Boolean(sessionRes.data.session.studentJoinedAt),
         teacher: Boolean(sessionRes.data.session.teacherJoinedAt)
       });
+      setStudentLeftEarly(Boolean(sessionRes.data.session.studentLeftAt || bookingRes.data.booking?.student_left_at));
       setError("");
       return sessionRes.data.session;
     },
@@ -294,6 +304,15 @@ const LiveClassroom = () => {
     const onUserLeft = (payload) => {
       if (String(payload.bookingId) !== String(bookingId)) return;
       setPresence((prev) => ({ ...prev, [payload.role]: false }));
+      if (payload.role === "student") {
+        setStudentLeftEarly(true);
+        if (isTeacher) {
+          showSessionToast({
+            title: "Student left the meeting",
+            message: "The student has left. You can now end the live class."
+          });
+        }
+      }
     };
     const onExtended = (payload) => {
       if (String(payload.bookingId) !== String(bookingId)) return;
@@ -337,14 +356,26 @@ const LiveClassroom = () => {
   }, [isLive, joinZegoRoom]);
 
   const leaveClass = () => {
+    if (isTeacher && isLive && !canTeacherCloseClass) {
+      toast.error("Teachers cannot leave a paid live class before time ends unless the student leaves first.");
+      return;
+    }
     destroyZego();
     socket.emit("leave:booking", { bookingId });
     navigate(user?.role === "teacher" ? "/teacher/history" : "/student");
   };
 
   const endSession = async () => {
+    if (isTeacher && isLive && !canTeacherCloseClass) {
+      toast.error("You can end this class after time is over or after the student leaves.");
+      setConfirmEndOpen(false);
+      return;
+    }
     setEnding(true);
     try {
+      if (isStudent) {
+        socket.emit("leave:booking", { bookingId });
+      }
       await api.patch(`/bookings/${bookingId}/complete`);
       destroyZego();
       setConfirmEndOpen(false);
@@ -491,7 +522,7 @@ const LiveClassroom = () => {
               <FaDoorOpen />
               Leave
             </button>
-            <button onClick={() => setConfirmEndOpen(true)} disabled={ending || isClosed} className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-500 disabled:opacity-60">
+            <button onClick={() => setConfirmEndOpen(true)} disabled={ending || isClosed || (isTeacher && isLive && !canTeacherCloseClass)} className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-500 disabled:opacity-60" title={isTeacher && isLive && !canTeacherCloseClass ? "Available after time ends or after student leaves" : "End session"}>
               <FaPhoneSlash />
               End
             </button>
@@ -581,22 +612,35 @@ const LiveClassroom = () => {
             <div className="text-center">
               <FaCheckCircle className="mx-auto text-4xl text-emerald-500" />
               <h2 className="mt-4 text-2xl font-bold">Session completed</h2>
-              <p className="mt-2 text-sm text-slate-600">Rate your mentor and head back to your dashboard.</p>
+              <p className="mt-2 text-sm text-slate-600">Would you like to rate your mentor now?</p>
             </div>
-            <div className="mt-5 flex justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button key={value} type="button" onClick={() => setRating(value)} className={value <= rating ? "text-amber-400" : "text-slate-300"}>
-                  <FaStar className="text-3xl" />
+            {feedbackMode === "choice" ? (
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button onClick={() => setFeedbackMode("rating")} className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white">
+                  Rating Now
                 </button>
-              ))}
-            </div>
-            <textarea value={review} onChange={(event) => setReview(event.target.value)} rows={4} placeholder="Write a short review..." className="mt-5 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500" />
-            <button onClick={submitReview} className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white">
-              Submit Rating
-            </button>
-            <button onClick={() => navigate("/student")} className="mt-3 w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700">
-              Go to Dashboard
-            </button>
+                <button onClick={() => navigate("/student")} className="rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700">
+                  Not Now, Go to Dashboard
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mt-5 flex justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button key={value} type="button" onClick={() => setRating(value)} className={value <= rating ? "text-amber-400" : "text-slate-300"}>
+                      <FaStar className="text-3xl" />
+                    </button>
+                  ))}
+                </div>
+                <textarea value={review} onChange={(event) => setReview(event.target.value)} rows={4} placeholder="Write a short review..." className="mt-5 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500" />
+                <button onClick={submitReview} className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white">
+                  Submit Rating
+                </button>
+                <button onClick={() => navigate("/student")} className="mt-3 w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-700">
+                  Not Now, Go to Dashboard
+                </button>
+              </>
+            )}
           </div>
         </div>
       ) : null}
@@ -605,8 +649,12 @@ const LiveClassroom = () => {
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/70 p-4 backdrop-blur">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white p-6 text-center text-slate-900 shadow-2xl">
             <FaVideo className="mx-auto text-3xl text-rose-500" />
-            <h2 className="mt-4 text-2xl font-bold">End session for everyone?</h2>
-            <p className="mt-2 text-sm text-slate-600">This marks the booking completed and closes the live classroom for both participants.</p>
+            <h2 className="mt-4 text-2xl font-bold">{isStudent ? "End your live class?" : "End session for everyone?"}</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {isStudent
+                ? "This closes the classroom and opens your rating options."
+                : "This marks the booking completed and closes the live classroom for both participants."}
+            </p>
             <button onClick={endSession} disabled={ending} className="mt-6 w-full rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-60">
               {ending ? "Ending..." : "End Session"}
             </button>

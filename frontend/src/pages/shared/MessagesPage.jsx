@@ -17,6 +17,7 @@ import GlassCard from "../../components/common/GlassCard";
 import PageLoader from "../../components/common/PageLoader";
 
 import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationContext";
 import { api } from "../../lib/api";
 import { connectSocket, socket } from "../../lib/socket";
 
@@ -54,6 +55,7 @@ const formatDateDivider = (value) => {
 
 const MessagesPage = () => {
   const { user } = useAuth();
+  const { loadNotifications } = useNotifications();
 
   const navigate = useNavigate();
 
@@ -298,6 +300,8 @@ const MessagesPage = () => {
       setMessages(data.messages || []);
 
       setMeta(data.meta || defaultMeta);
+
+      loadNotifications?.().catch(() => {});
     } catch (requestError) {
       if (!silent) {
         toast.error(
@@ -427,6 +431,14 @@ const MessagesPage = () => {
     }
   };
 
+  const handleDraftKeyDown = (event) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent?.isComposing) return;
+    event.preventDefault();
+    if (!sending) {
+      sendMessage();
+    }
+  };
+
   useEffect(() => {
     loadConversations();
   }, []);
@@ -496,6 +508,12 @@ const MessagesPage = () => {
 
         return [...prev, message];
       });
+
+      if (String(message.senderId) !== String(user?.id)) {
+        window.setTimeout(() => {
+          loadMessages(message.conversationId, { silent: true });
+        }, 350);
+      }
     };
 
     socket.on(
@@ -509,7 +527,7 @@ const MessagesPage = () => {
         handleConversationMessage
       );
     };
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -839,6 +857,7 @@ const MessagesPage = () => {
                     event.target.value
                   )
                 }
+                onKeyDown={handleDraftKeyDown}
                 placeholder={
                   isLocked
                     ? meta.lockMessage
