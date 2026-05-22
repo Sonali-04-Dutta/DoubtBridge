@@ -8,6 +8,8 @@ import sessionRoutes from "./session.routes.js";
 import adminRoutes from "./admin.routes.js";
 import messageRoutes from "./message.routes.js";
 import notificationRoutes from "./notification.routes.js";
+import { recommendTeachers } from "../controllers/teacher.controller.js";
+import { allowRoles, requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -16,6 +18,7 @@ router.get("/health", (_req, res) => {
 });
 
 router.use("/auth", authRoutes);
+router.post("/recommend-mentors", requireAuth, allowRoles("student"), recommendTeachers);
 router.use("/teachers", teacherRoutes);
 router.use("/teacher", teacherRoutes);
 router.use("/bookings", bookingRoutes);

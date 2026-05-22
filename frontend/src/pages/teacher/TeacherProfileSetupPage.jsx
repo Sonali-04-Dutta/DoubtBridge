@@ -32,10 +32,13 @@ const availabilityOptions = [
 const defaultForm = {
   bio: "",
   subjects: "",
+  topics: "",
   qualifications: "",
   certificates: "",
   experience: 0,
   languages: "",
+  classLevels: "",
+  tags: "",
   category: "STEM",
   price15: 99,
   price30: 179,
@@ -65,10 +68,13 @@ const TeacherProfileSetupPage = () => {
         setForm({
           bio: teacher?.bio || "",
           subjects: teacher?.subjects?.join(", ") || "",
+          topics: teacher?.topics?.join(", ") || "",
           qualifications: teacher?.qualifications || "",
           certificates: teacher?.certificates?.join(", ") || "",
           experience: Number(teacher?.experience || 0),
           languages: teacher?.languages?.join(", ") || "",
+          classLevels: teacher?.classLevels?.join(", ") || "",
+          tags: teacher?.tags?.join(", ") || "",
           category: teacher?.category || "STEM",
           price15: Number(teacher?.pricing?.min15 ?? 99),
           price30: Number(teacher?.pricing?.min30 ?? 179),
@@ -101,6 +107,21 @@ const TeacherProfileSetupPage = () => {
   const parsedLanguages = useMemo(
     () => form.languages.split(",").map((item) => item.trim()).filter(Boolean),
     [form.languages]
+  );
+
+  const parsedTopics = useMemo(
+    () => form.topics.split(",").map((item) => item.trim()).filter(Boolean),
+    [form.topics]
+  );
+
+  const parsedClassLevels = useMemo(
+    () => form.classLevels.split(",").map((item) => item.trim()).filter(Boolean),
+    [form.classLevels]
+  );
+
+  const parsedTags = useMemo(
+    () => form.tags.split(",").map((item) => item.trim()).filter(Boolean),
+    [form.tags]
   );
 
   const displayName = user?.name || "Your Name";
@@ -138,8 +159,11 @@ const TeacherProfileSetupPage = () => {
       await api.put("/teacher/profile", {
         ...form,
         subjects: parsedSubjects,
+        topics: parsedTopics,
         certificates: form.certificates,
         languages: parsedLanguages,
+        classLevels: parsedClassLevels,
+        tags: parsedTags,
         availability
       });
       await refreshProfile();
@@ -285,6 +309,20 @@ const TeacherProfileSetupPage = () => {
 
               <label>
                 <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FaLayerGroup className="text-brand-600" />
+                  Topics
+                </span>
+                <input
+                  className={`${inputClass} mt-2`}
+                  placeholder="Arrays, Trees, Electrostatics, Recursion"
+                  value={form.topics}
+                  onChange={(event) => setForm({ ...form, topics: event.target.value })}
+                />
+                <p className={helperClass}>Add exact chapters or skills you teach. This powers AI topic matching.</p>
+              </label>
+
+              <label>
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
                   <FaGraduationCap className="text-brand-600" />
                   Qualifications
                 </span>
@@ -309,6 +347,34 @@ const TeacherProfileSetupPage = () => {
                   onChange={(event) => setForm({ ...form, languages: event.target.value })}
                 />
                 <p className={helperClass}>Add every language in which you can teach comfortably.</p>
+              </label>
+
+              <label>
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FaGraduationCap className="text-brand-600" />
+                  Class Levels
+                </span>
+                <input
+                  className={`${inputClass} mt-2`}
+                  placeholder="Class 12, College, B.Tech"
+                  value={form.classLevels}
+                  onChange={(event) => setForm({ ...form, classLevels: event.target.value })}
+                />
+                <p className={helperClass}>Mention the student levels you teach best.</p>
+              </label>
+
+              <label>
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FaAward className="text-brand-600" />
+                  Expertise Tags
+                </span>
+                <input
+                  className={`${inputClass} mt-2`}
+                  placeholder="Interview Prep, FAANG Mentor, Board Exams"
+                  value={form.tags}
+                  onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                />
+                <p className={helperClass}>Tags help match extra context like interview prep or exam practice.</p>
               </label>
             </div>
           </GlassCard>
@@ -460,6 +526,12 @@ const TeacherProfileSetupPage = () => {
               <div className="rounded-xl border border-brand-200 bg-white/80 px-3 py-2 text-xs text-slate-600">
                 <p className="font-semibold text-slate-700">Languages</p>
                 <p className="mt-1">{parsedLanguages.join(", ") || "Add languages"}</p>
+              </div>
+
+              <div className="rounded-xl border border-brand-200 bg-white/80 px-3 py-2 text-xs text-slate-600">
+                <p className="font-semibold text-slate-700">AI Match Metadata</p>
+                <p className="mt-1">{parsedTopics.slice(0, 4).join(", ") || "Add topics"}</p>
+                <p className="mt-1 text-brand-700">{parsedTags.slice(0, 3).join(", ") || "Add tags"}</p>
               </div>
             </div>
           </GlassCard>

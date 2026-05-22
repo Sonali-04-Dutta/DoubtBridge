@@ -173,9 +173,10 @@ export const listAllMentors = async (req, res, next) => {
 
 export const recommendTeachers = async (req, res, next) => {
   try {
-    const { problem, subject, topic, budget, language, classLevel, limit } = req.body;
+    const { problem, subject, topic, budget, language, classLevel, extraContext, limit } = req.body;
     const normalizedProblem = String(problem || "").trim();
-    const filterPrompt = [subject, topic, language, classLevel, normalizedProblem].filter(Boolean).join(" ");
+    const normalizedContext = String(extraContext || "").trim();
+    const filterPrompt = [subject, topic, budget, language, classLevel, normalizedProblem, normalizedContext].filter(Boolean).join(" ");
 
     if (filterPrompt.trim().length < 3) {
       throw new ApiError(400, "Please add a subject, topic, or learning problem.");
@@ -183,13 +184,22 @@ export const recommendTeachers = async (req, res, next) => {
 
     const recommendation = await recommendMentorsByProblem({
       problem: filterPrompt,
-      filters: { subject, topic, budget, language, classLevel },
+      filters: { subject, topic, budget, language, classLevel, extraContext: normalizedContext || normalizedProblem },
       limit
     });
 
     return res.json({
       success: true,
       message: "Recommendations generated successfully",
+      mentors: recommendation.teachers.map((teacher) => ({
+        mentorId: teacher.id,
+        name: teacher.name,
+        score: teacher.ai?.score || 0,
+        matchPercentage: teacher.ai?.matchPercentage || 0,
+        outOfBudget: Boolean(teacher.ai?.outOfBudget),
+        mentorPrice: teacher.ai?.mentorPrice || teacher.pricePerSession || 0,
+        matchedReasons: teacher.ai?.reasons || []
+      })),
       ...recommendation
     });
   } catch (error) {
@@ -560,10 +570,14 @@ export const updateTeacherProfile = async (req, res, next) => {
     const {
       bio,
       subjects,
+      topics,
       qualifications,
       certificates,
       experience,
+      yearsExperience,
       languages,
+      classLevels,
+      tags,
       category,
       price15,
       price30,
@@ -574,11 +588,20 @@ export const updateTeacherProfile = async (req, res, next) => {
     } = req.body;
 
     const normalizedSubjects = subjects === undefined ? undefined : parseStringArray(subjects);
+    const normalizedTopics = topics === undefined ? undefined : parseStringArray(topics);
     const normalizedLanguages = languages === undefined ? undefined : parseStringArray(languages);
+    const normalizedClassLevels = classLevels === undefined ? undefined : parseStringArray(classLevels);
+    const normalizedTags = tags === undefined ? undefined : parseStringArray(tags);
     const normalizedProfileImage = profileImage === undefined ? undefined : String(profileImage).trim();
     const normalizedCertificates = certificates === undefined ? undefined : parseStringArray(certificates);
     const needsApprovalReview =
-      certificates !== undefined || bio !== undefined || subjects !== undefined || qualifications !== undefined;
+      certificates !== undefined ||
+      bio !== undefined ||
+      subjects !== undefined ||
+      topics !== undefined ||
+      classLevels !== undefined ||
+      tags !== undefined ||
+      qualifications !== undefined;
     if (availability !== undefined && !MANUAL_TEACHER_STATUSES.includes(availability)) {
       throw new ApiError(400, "Invalid availability state");
     }
@@ -588,13 +611,17 @@ export const updateTeacherProfile = async (req, res, next) => {
       {
         ...(bio !== undefined ? { bio } : {}),
         ...(subjects !== undefined ? { subjects: normalizedSubjects } : {}),
+        ...(topics !== undefined ? { topics: normalizedTopics } : {}),
         ...(qualifications !== undefined ? { qualifications } : {}),
         ...(certificates !== undefined ? { certificates: normalizedCertificates } : {}),
-        ...(experience !== undefined ? { experience } : {}),
+        ...(experience !== undefined ? { experience, yearsExperience: yearsExperience ?? experience } : {}),
+        ...(yearsExperience !== undefined && experience === undefined ? { yearsExperience } : {}),
         ...(languages !== undefined ? { languages: normalizedLanguages } : {}),
+        ...(classLevels !== undefined ? { classLevels: normalizedClassLevels } : {}),
+        ...(tags !== undefined ? { tags: normalizedTags } : {}),
         ...(category !== undefined ? { category } : {}),
-        ...(price15 !== undefined ? { price_15: price15 } : {}),
-        ...(price30 !== undefined ? { price_30: price30 } : {}),
+        ...(price15 !== undefined ? { price_15: price15, pricePerSession: price30 ?? price15 } : {}),
+        ...(price30 !== undefined ? { price_30: price30, pricePerSession: price30 } : {}),
         ...(price45 !== undefined ? { price_45: price45 } : {}),
         ...(price60 !== undefined ? { price_60: price60 } : {}),
         ...(profileImage !== undefined ? { profileImage: normalizedProfileImage } : {}),

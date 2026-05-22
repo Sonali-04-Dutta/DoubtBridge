@@ -237,6 +237,7 @@ const Navbar = () => {
           <NavLink className={linkClass} to="/about">About</NavLink>
           <NavLink className={linkClass} to="/mentors">Our Mentors</NavLink>
           <NavLink className={linkClass} to="/find-teachers">Find Teachers</NavLink>
+          <NavLink className={linkClass} to="/contact">Contact</NavLink>
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
@@ -328,6 +329,7 @@ const Navbar = () => {
             <NavLink onClick={() => setIsMobileOpen(false)} className={linkClass} to="/about">About</NavLink>
             <NavLink onClick={() => setIsMobileOpen(false)} className={linkClass} to="/mentors">Our Mentors</NavLink>
             <NavLink onClick={() => setIsMobileOpen(false)} className={linkClass} to="/find-teachers">Find Teachers</NavLink>
+            <NavLink onClick={() => setIsMobileOpen(false)} className={linkClass} to="/contact">Contact</NavLink>
           </nav>
 
           <div className="mt-4 border-t border-white/70 pt-4">
@@ -362,6 +364,13 @@ const Navbar = () => {
                   to={dashboardLink}
                 >
                   Go to Dashboard
+                </Link>
+                <Link
+                  onClick={() => setIsMobileOpen(false)}
+                  className="rounded-xl border border-brand-100 px-4 py-2 text-center text-sm font-semibold text-brand-700"
+                  to="/profile"
+                >
+                  Edit Profile
                 </Link>
                 <button
                   type="button"

@@ -5,10 +5,16 @@ const teacherSchema = new mongoose.Schema(
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
     bio: { type: String, default: "" },
     subjects: { type: [String], default: [] },
+    topics: { type: [String], default: [] },
     qualifications: { type: String, default: "" },
     certificates: { type: [String], default: [] },
     experience: { type: Number, default: 0 },
+    yearsExperience: { type: Number, default: 0 },
     languages: { type: [String], default: [] },
+    classLevels: { type: [String], default: [] },
+    tags: { type: [String], default: [] },
+    pricePerSession: { type: Number, default: 0 },
+    totalStudents: { type: Number, default: 0 },
     price_15: { type: Number, default: 99 },
     price_30: { type: Number, default: 179 },
     price_45: { type: Number, default: 259 },
@@ -50,5 +56,16 @@ const teacherSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+teacherSchema.index({ subjects: 1, topics: 1, languages: 1, classLevels: 1, approvalStatus: 1, is_verified: 1 });
+teacherSchema.index({ tags: 1 });
+teacherSchema.index({
+  subjects: "text",
+  topics: "text",
+  tags: "text",
+  bio: "text",
+  category: "text",
+  qualifications: "text"
+});
 
 export const Teacher = mongoose.model("Teacher", teacherSchema);

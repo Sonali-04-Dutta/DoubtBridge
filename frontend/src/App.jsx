@@ -9,6 +9,7 @@ import LoginPage from "./pages/public/LoginPage";
 import SignupPage from "./pages/public/SignupPage";
 import OurMentorsPage from "./pages/public/OurMentorsPage";
 import PublicTeacherProfilePage from "./pages/public/PublicTeacherProfilePage";
+import ContactPage from "./pages/public/ContactPage";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import FindTeachersPage from "./pages/student/FindTeachersPage";
 import BookingPage from "./pages/student/BookingPage";
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/mentors" element={<OurMentorsPage />} />
           <Route path="/mentors/:id" element={<PublicTeacherProfilePage />} />
           <Route path="/find-teachers" element={<FindTeachersPage />} />

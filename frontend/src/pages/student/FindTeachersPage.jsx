@@ -44,19 +44,28 @@ const FindTeachersPage = () => {
     setHasRequested(true);
 
     try {
-      const { data } = await api.post("/teachers/recommendations", {
+      const { data } = await api.post("/recommend-mentors", {
         problem: trimmed,
         subject: form.subject,
         topic: form.topic,
         budget: form.budget,
         language: form.language,
         classLevel: form.classLevel,
+        extraContext: trimmed,
         limit: 6
       });
       setTeachers(data.teachers || []);
       setAnalysis(data.analysis || null);
       if (!data.teachers?.length) {
         toast.error("No strong match found yet. Try adding more topic detail.");
+      } else if ((data.analysis?.outOfBudgetCount || 0) > 0 && (data.analysis?.withinBudgetCount || 0) === 0) {
+        toast("Teacher is found, but out of your budget.", {
+          icon: "!",
+          style: {
+            border: "1px solid #f59e0b",
+            color: "#92400e"
+          }
+        });
       } else {
         toast.success("AI found your best-fit mentors.");
       }
@@ -90,7 +99,7 @@ const FindTeachersPage = () => {
           </p>
           <h1 className="mt-4 text-3xl font-extrabold md:text-4xl">Find Teachers with Smart Recommendations</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/90 md:text-base">
-            Share your subject, topic, budget, preferred language, and class level. DoubtBridge will shortlist mentors that best fit your need.
+            Share your subject, topic, budget, preferred language, and class level. DoubtBridge only recommends mentors whose profile actually matches the subject and topic.
           </p>
           {!user || user.role !== "student" ? (
             <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white/20 px-3 py-2 text-xs font-semibold text-white">
@@ -105,11 +114,11 @@ const FindTeachersPage = () => {
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
               <label>
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/85">Subject</span>
-                <input value={form.subject} onChange={updateField("subject")} placeholder="Physics" className="w-full rounded-2xl border border-white/35 bg-white/20 px-3 py-2 text-sm text-white placeholder:text-white/70 outline-none" />
+                <input value={form.subject} onChange={updateField("subject")} placeholder="DSA" className="w-full rounded-2xl border border-white/35 bg-white/20 px-3 py-2 text-sm text-white placeholder:text-white/70 outline-none" />
               </label>
               <label>
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/85">Topic</span>
-                <input value={form.topic} onChange={updateField("topic")} placeholder="Electrostatics" className="w-full rounded-2xl border border-white/35 bg-white/20 px-3 py-2 text-sm text-white placeholder:text-white/70 outline-none" />
+                <input value={form.topic} onChange={updateField("topic")} placeholder="Graphs" className="w-full rounded-2xl border border-white/35 bg-white/20 px-3 py-2 text-sm text-white placeholder:text-white/70 outline-none" />
               </label>
               <label>
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/85">Budget</span>
@@ -131,7 +140,7 @@ const FindTeachersPage = () => {
               <textarea
                 value={problem}
                 onChange={(event) => setProblem(event.target.value)}
-                placeholder="Example: I get stuck in numericals and need exam-level practice."
+                placeholder="Example: I am weak in recursion and need interview preparation."
                 rows={3}
                 className="w-full resize-none rounded-2xl border border-white/35 bg-white/20 px-4 py-3 text-sm text-white placeholder:text-white/70 outline-none"
               />
@@ -198,8 +207,8 @@ const FindTeachersPage = () => {
           </section>
         ) : (
           <EmptyState
-            title="No recommendations yet"
-            description="Add more context such as exam name, chapter, and where you are getting stuck."
+            title="No exact mentor found"
+            description="Try increasing budget, changing topic, or checking the subject spelling."
           />
         )
       ) : null}
